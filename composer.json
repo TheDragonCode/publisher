@@ -1,0 +1,29 @@
+{
+    "name": "andrey-helldar/release",
+    "description": "Publishes a new version of the release and collects all commits from the previous launch in the description",
+    "type": "composer-plugin",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrey Helldar",
+            "email": "helldar@ai-rus.com"
+        }
+    ],
+    "require": {
+        "php": "^7.1",
+        "composer/composer": "*",
+        "composer-plugin-api": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Helldar\\Release\\": "src"
+        }
+    },
+    "extra": {
+        "class": "Helldar\\Release\\Release"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
