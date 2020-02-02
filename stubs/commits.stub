@@ -1,0 +1,23 @@
+{
+  repository(owner: "{{owner}}", name: "{{name}}") {
+    ... on Repository {
+      defaultBranchRef {
+        target {
+          ... on Commit {
+            history(since: "{{date}}") {
+              edges {
+                node {
+                  ... on Commit {
+                    messageHeadline
+                    oid
+                    committedDate
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

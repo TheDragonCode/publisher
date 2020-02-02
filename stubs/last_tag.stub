@@ -1,0 +1,34 @@
+{
+  repository(owner: "{{owner}}", name: "{{name}}") {
+    tags: refs(refPrefix: "refs/tags/", last: 1) {
+      edges {
+        node {
+          ...refInfo
+        }
+      }
+    }
+  }
+}
+
+fragment refInfo on Ref {
+  name
+  target {
+    sha: oid
+    ... on Tag {
+      target {
+        ... on Commit {
+          ...commitInfo
+        }
+      }
+    }
+    ... on Commit {
+      ...commitInfo
+    }
+  }
+}
+
+fragment commitInfo on Commit {
+  author {
+    date
+  }
+}

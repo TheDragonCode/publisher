@@ -4,18 +4,25 @@ namespace Helldar\Release;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
+use Composer\Plugin\Capability\CommandProvider as CommandProviderCapability;
+use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
+use Helldar\Release\Commands\CommandProvider;
 
-class Release implements PluginInterface
+final class Release implements PluginInterface, Capable
 {
-    /**
-     * Apply plugin modifications to Composer
-     *
-     * @param Composer $composer
-     * @param IOInterface $io
-     */
     public function activate(Composer $composer, IOInterface $io)
     {
-        // TODO: Implement activate() method.
+        //
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getCapabilities()
+    {
+        return [
+            CommandProviderCapability::class => CommandProvider::class,
+        ];
     }
 }
