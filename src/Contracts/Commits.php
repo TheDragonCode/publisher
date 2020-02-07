@@ -2,7 +2,7 @@
 
 namespace Helldar\Release\Contracts;
 
-interface Commitable
+interface Commits
 {
     const CONTAINS_ADDED = [
         'add',
@@ -26,4 +26,8 @@ interface Commitable
     const TYPE_CHANGED = 'Changed';
     const TYPE_FIXED = 'Fixed';
     const TYPE_OTHER = 'Other';
+
+    public function push(string $hash, string $message = null): void;
+
+    public function count(): int;
 }

@@ -2,7 +2,9 @@
 
 namespace Helldar\Release\Entities;
 
-class Commit
+use Helldar\Release\Contracts\Commit as Commitable;
+
+class Commit implements Commitable
 {
     /** @var string */
     protected $message;
@@ -10,17 +12,13 @@ class Commit
     /** @var string */
     protected $hash;
 
-    /** @var string */
-    protected $date;
-
-    public function __construct(string $message, string $hash, string $date)
+    public function __construct(string $hash, string $message = null)
     {
         $this->message = $message;
         $this->hash    = $hash;
-        $this->date    = $date;
     }
 
-    public function getMessage(): string
+    public function getMessage(): ?string
     {
         return $this->message;
     }
@@ -28,10 +26,5 @@ class Commit
     public function getHash(): string
     {
         return $this->hash;
-    }
-
-    public function getDate(): string
-    {
-        return $this->date;
     }
 }

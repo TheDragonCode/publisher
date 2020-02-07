@@ -3,7 +3,8 @@
 namespace Helldar\Release\Commands;
 
 use Composer\Command\BaseCommand;
-use Helldar\Release\Contracts\Stubs;
+use Helldar\Release\Contracts\Commits as CommitsContract;
+use Helldar\Release\Contracts\Version as VersionContract;
 use Helldar\Release\Entities\Commits;
 use Helldar\Release\Entities\Version;
 use Helldar\Release\Services\Client;
@@ -11,16 +12,30 @@ use Helldar\Release\Services\Log;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-final class ReleaseCommand extends BaseCommand implements Stubs
+final class ReleaseCommand extends BaseCommand
 {
     /** @var \Helldar\Release\Services\Client */
     protected $client;
 
-    /** @var \Helldar\Release\Entities\Version */
-    protected $release;
+    /** @var VersionContract */
+    protected $last_tag;
 
     /** @var \Helldar\Release\Services\Log */
     protected $log;
+
+    /**
+     * Package owner.
+     *
+     * @var string
+     */
+    protected $owner;
+
+    /**
+     * Package name.
+     *
+     * @var string
+     */
+    protected $name;
 
     protected function configure()
     {
@@ -31,11 +46,13 @@ final class ReleaseCommand extends BaseCommand implements Stubs
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->autoload();
+
         $this->setLog($output);
-        $this->showPackageName();
+        $this->setPackageOwnerName();
 
         $this->setGithubClient();
-        $this->getLatestRelease();
+        $this->loadLastTag();
 
         $this->pushRelease(
             $this->getNewVersion(),
@@ -43,16 +60,21 @@ final class ReleaseCommand extends BaseCommand implements Stubs
         );
     }
 
-    protected function getLatestRelease(): void
+    protected function loadLastTag(): void
     {
         $this->log->info('Loading releases...');
 
-        $tag = $this->client->latestTag();
-
-        $this->release = new Version($tag['hash'], $tag['version'], $tag['date']);
+        $this->last_tag = $this->client->lastTag();
     }
 
-    protected function getNewVersion(): Version
+    protected function getCommits(): CommitsContract
+    {
+        $this->log->info('Loading commits...');
+
+        return $this->client->commits($this->last_tag);
+    }
+
+    protected function getNewVersion(): VersionContract
     {
         $version = $this->askNewVersion();
 
@@ -66,32 +88,28 @@ final class ReleaseCommand extends BaseCommand implements Stubs
         return $version;
     }
 
-    protected function askNewVersion(): Version
+    protected function askNewVersion(): VersionContract
     {
-        $version = new Version(
-            $this->release->getHash(),
-            $this->release->getVersion(),
-            $this->release->getDate()
-        );
+        $version = clone $this->last_tag;
 
         $choice = $this->getIO()
-            ->select("Select version for increment (default, " . Version::PATCH . "):", [
-                Version::MAJOR  => 'major',
-                Version::MINOR  => 'minor',
-                Version::PATCH  => 'patch',
-                Version::MANUAL => 'manual',
-            ], Version::PATCH);
+            ->select("Select version for increment (default, " . VersionContract::PATCH . "):", [
+                VersionContract::MAJOR  => 'major',
+                VersionContract::MINOR  => 'minor',
+                VersionContract::PATCH  => 'patch',
+                VersionContract::MANUAL => 'manual',
+            ], VersionContract::PATCH);
 
         switch ($choice) {
-            case Version::MAJOR:
+            case VersionContract::MAJOR:
                 $version->incrementMajor();
                 break;
 
-            case Version::MINOR:
+            case VersionContract::MINOR:
                 $version->incrementMinor();
                 break;
 
-            case Version::PATCH:
+            case VersionContract::PATCH:
                 $version->incrementPatch();
                 break;
 
@@ -106,29 +124,22 @@ final class ReleaseCommand extends BaseCommand implements Stubs
 
     protected function setGithubClient(): void
     {
-        $this->client = new Client($this->getComposer(), $this->getIO(), $this->name());
+        $this->client = new Client($this->owner, $this->name);
+
+        $this->client->setVersionConcern(Version::class);
+        $this->client->setCommitsConcern(Commits::class);
     }
 
-    protected function getCommits(): Commits
-    {
-        $this->log->info('Loading commits...');
-
-        return new Commits(
-            $this->client->commits(
-                $this->release->getDate()
-            )
-        );
-    }
-
-    protected function pushRelease(Version $version, Commits $commits): void
+    protected function pushRelease(VersionContract $version, CommitsContract $commits): void
     {
         $this->log->info('Publishing a new version ...');
-        $this->log->info('pushed: ' . $version->getVersion());
-        $this->log->info('commits count: ' . count($commits->grouped()));
+        $this->log->info('Version: ' . $version->getVersion());
+        $this->log->info('Commits: ' . $commits->count());
+        $this->log->info('');
 
-        $content = $this->client->pushTag($version, $commits);
-
-        die(json_encode($content));
+        $this->log->info(
+            $this->client->createTag($version, $commits)
+        );
     }
 
     protected function package()
@@ -139,10 +150,9 @@ final class ReleaseCommand extends BaseCommand implements Stubs
     /**
      * @return string|null
      */
-    protected function name(): ?string
+    protected function packageName(): ?string
     {
-        // return $this->package()->getName();
-        return 'andrey-helldar/testing-ci';
+        return $this->package()->getName();
     }
 
     protected function url(): ?string
@@ -150,14 +160,28 @@ final class ReleaseCommand extends BaseCommand implements Stubs
         return $this->package()->getSourceUrl();
     }
 
-    protected function showPackageName()
+    protected function setPackageOwnerName()
     {
-        $this->log->info('Package name: ' . $this->name());
+        $package = $this->packageName();
+
+        [$owner, $name] = \explode('/', $package);
+
+        $this->owner = $owner;
+        $this->name  = $name;
+
+        $this->log->info('Package name: ' . $package);
         $this->log->info('');
     }
 
     protected function setLog(OutputInterface $output)
     {
         $this->log = new Log($this->getIO(), $output);
+    }
+
+    protected function autoload()
+    {
+        $vendor_dir = $this->getComposer()->getConfig()->get('vendor-dir');
+
+        require_once $vendor_dir . '/autoload.php';
     }
 }

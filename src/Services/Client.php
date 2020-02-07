@@ -2,105 +2,114 @@
 
 namespace Helldar\Release\Services;
 
-use Composer\Composer;
-use Composer\IO\IOInterface;
-use Helldar\Release\Contracts\Stubs;
-use Helldar\Release\Entities\Commits;
-use Helldar\Release\Entities\Version;
-use Helldar\Release\Exceptions\FileNotExistsException;
-use Symfony\Thanks\GitHubClient;
+use Github\Client as GithubClient;
+use Helldar\Release\Contracts\Commits as CommitsContract;
+use Helldar\Release\Contracts\Version as VersionContract;
+use Helldar\Release\Traits\Commitable;
+use Helldar\Release\Traits\Versionable;
+use Http\Adapter\Guzzle6\Client as GuzzleClient;
 
-class Client implements Stubs
+class Client
 {
-    /** @var \Composer\Composer */
-    protected $composer;
+    use Versionable;
+    use Commitable;
 
-    /** @var \Composer\IO\IOInterface */
-    protected $io;
-
-    /** @var string */
-    protected $package_name;
-
-    /** @var \Symfony\Thanks\GitHubClient */
+    /** @var \Github\Client */
     protected $client;
 
-    /** @var string */
+    /** @var string|null Package name */
     protected $owner;
 
-    /** @var string */
+    /** @var string|null Package owner */
     protected $name;
 
     /** @var string|null */
     protected $date;
 
-    public function __construct(Composer $composer, IOInterface $io, string $package_name)
+    public function __construct(string $package_owner = null, string $package_name = null)
     {
-        $this->composer     = $composer;
-        $this->io           = $io;
-        $this->package_name = $package_name;
-        $this->client       = new GitHubClient($composer, $io);
+        $this->owner = $package_owner;
+        $this->name  = $package_name;
 
-        $this->parseName($package_name);
+        $this->configure();
     }
 
-    public function call(string $filename)
+    public function lastTag(): VersionContract
     {
-        return $this->client->call(
-            $this->query($filename)
-        );
-    }
+        try {
+            $tag = $this->client->repository()->releases()->latest($this->owner, $this->name);
 
-    public function latestTag(): array
-    {
-        $content = $this->call(static::LAST_TAG_STUB);
-
-        $node    = $content['repository']['tags']['edges'][0]['node'] ?? [];
-        $hash    = $node['target']['sha'] ?? null;
-        $version = $node['name'] ?? null;
-        $date    = $node['target']['author']['date'] ?? null;
-
-        return \compact('hash', 'version', 'date');
-    }
-
-    public function commits(string $date): array
-    {
-        $this->date = $date;
-
-        $content = $this->call(static::COMMITS_STUB);
-
-        return $content['repository']['defaultBranchRef']['target']['history']['edges'];
-    }
-
-    public function pushTag(Version $version, Commits $commits)
-    {
-        return $this->call(static::NEW_TAG_STUB);
-    }
-
-    protected function parseName(string $package_name): void
-    {
-        [$owner, $name] = \explode('/', $package_name);
-
-        $this->owner = $owner;
-        $this->name  = $name;
-    }
-
-    protected function query(string $filename): string
-    {
-        return \str_replace(
-            ['{{owner}}', '{{name}}', '{{date}}'],
-            [$this->owner, $this->name, $this->date],
-            $this->queryTemplate($filename)
-        );
-    }
-
-    protected function queryTemplate(string $filename): string
-    {
-        $path = \realpath(__DIR__ . '/../../stubs/' . $filename);
-
-        if (! \file_exists($path)) {
-            throw new FileNotExistsException($path);
+            return $this->getVersionConcern(
+                $tag['tag_name'] ?? null
+            );
         }
+        catch (\Exception $exception) {
+            return $this->getVersionConcern();
+        }
+    }
 
-        return \file_get_contents($path);
+    public function commits(VersionContract $version): CommitsContract
+    {
+        try {
+            $response = $version->noReleases()
+                ? $this->getAllCommits()
+                : $this->getCompareCommits($version->getVersionRaw());
+
+            $commits = $response['commits'] ?? [];
+            $concern = $this->getCommitsConcern();
+
+            foreach ($commits as $commit) {
+                $concern->push(
+                    $commit['sha'] ?? null,
+                    $commit['commit']['message'] ?? null
+                );
+            }
+
+            return $concern;
+        }
+        catch (\Exception $exception) {
+            return $this->getCommitsConcern();
+        }
+    }
+
+    public function createTag(VersionContract $version, CommitsContract $commits): string
+    {
+        try {
+            $this->client->repository()
+                ->releases()
+                ->create($this->owner, $this->name, [
+                    'tag_name' => $version->getVersion(),
+                ]);
+
+            return 'Tag created successfully';
+        }
+        catch (\Exception $exception) {
+            return $exception->getMessage();
+        }
+    }
+
+    protected function getCompareCommits(string $version): array
+    {
+        return $this->client->repository()
+            ->commits()
+            ->compare($this->owner, $this->name, $version, 'master');
+    }
+
+    protected function getAllCommits(): array
+    {
+        $params = ['sha' => 'master'];
+
+        return $this->client->repository()
+            ->commits()
+            ->all($this->owner, $this->name, $params);
+    }
+
+    protected function configure()
+    {
+        $this->client = GithubClient::createWithHttpClient(
+            new GuzzleClient()
+        );
+
+        $this->client->authenticate('425e8ff748b36ea628e716fceeedee26a50c0ead', GithubClient::AUTH_HTTP_TOKEN);
     }
 }

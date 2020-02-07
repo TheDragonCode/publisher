@@ -15,11 +15,13 @@
         "ext-json": "*",
         "composer-plugin-api": "^1.1",
         "composer/composer": "*",
-        "symfony/thanks": "^1.2"
+        "guzzlehttp/psr7": "^1.2",
+        "knplabs/github-api": "^2.12",
+        "php-http/guzzle6-adapter": "^2.0"
     },
     "autoload": {
         "psr-4": {
-            "Helldar\\Release\\": "src"
+            "Helldar\\Release\\": "src/"
         }
     },
     "extra": {

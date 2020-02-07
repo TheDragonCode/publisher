@@ -2,55 +2,22 @@
 
 namespace Helldar\Release\Entities;
 
-use Helldar\Release\Contracts\Commitable;
+use Helldar\Release\Contracts\Commits as Commitable;
 use Helldar\Release\Services\Str;
 
 class Commits implements Commitable
 {
-    /** @var \Helldar\Release\Entities\Commit[] */
+    /** @var \Helldar\Release\Contracts\Commit[] */
     protected $commits = [];
 
-    protected $edges = [];
-
-    public function __construct(array $edges = [])
+    public function push(string $hash, string $message = null): void
     {
-        $this->edges = $edges;
+        $this->commits[] = new Commit($hash, $message);
     }
 
-    public function grouped(): array
+    public function count(): int
     {
-        $this->each();
-
-        return $this->getCommits();
-    }
-
-    protected function each()
-    {
-        foreach ($this->edges as $edge) {
-            $node    = $edge['node'];
-            $message = $node['messageHeadline'];
-            $hash    = $node['oid'];
-            $date    = $node['committedDate'];
-
-            if (! $this->contains($message, static::EXCLUDE)) {
-                $type = $this->type($message);
-
-                $this->push($type, $message, $hash, $date);
-            }
-        }
-    }
-
-    /**
-     * @return array|\Helldar\Release\Entities\Commit[]
-     */
-    protected function getCommits(): array
-    {
-        return $this->commits;
-    }
-
-    protected function push(string $type, string $message, string $hash, string $date): void
-    {
-        $this->commits[$type][] = new Commit($message, $hash, $date);
+        return \count($this->commits);
     }
 
     protected function contains(string $message, array $values): bool

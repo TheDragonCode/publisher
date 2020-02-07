@@ -2,15 +2,12 @@
 
 namespace Helldar\Release\Entities;
 
-use Helldar\Release\Contracts\Versionable;
+use Helldar\Release\Contracts\Version as Versionable;
 
 class Version implements Versionable
 {
     /** @var string|null */
-    protected $hash;
-
-    /** @var string|null */
-    protected $date;
+    protected $raw;
 
     /** @var int */
     protected $major = 0;
@@ -24,11 +21,11 @@ class Version implements Versionable
     /** @var string|null */
     protected $manual;
 
-    public function __construct(string $hash = null, string $version = null, string $date = null)
+    public function __construct(string $version = null)
     {
-        $this->setHash($hash);
-        $this->setVersion($version);
-        $this->setDate($date);
+        $this->raw = $version;
+
+        $this->parse();
     }
 
     public function incrementMajor(): void
@@ -49,16 +46,6 @@ class Version implements Versionable
         $this->patch++;
     }
 
-    public function getHash(): ?string
-    {
-        return $this->hash;
-    }
-
-    public function setHash(string $hash = null): void
-    {
-        $this->hash = $hash;
-    }
-
     public function getVersion(): ?string
     {
         return empty($this->manual)
@@ -66,25 +53,9 @@ class Version implements Versionable
             : $this->manual;
     }
 
-    public function setVersion(string $version = null): void
+    public function getVersionRaw(): ?string
     {
-        if (! empty($version)) {
-            \preg_match('/(\d*)\.(\d*)(\.*(\d*))/i', $version, $matches);
-
-            $this->major = (int) ($matches[1] ?? 0);
-            $this->minor = (int) ($matches[2] ?? 0);
-            $this->patch = (int) ($matches[4] ?? 0);
-        }
-    }
-
-    public function getDate(): ?string
-    {
-        return $this->date;
-    }
-
-    public function setDate(string $date = null): void
-    {
-        $this->date = $date ?: '1970-01-01T00:00:00Z';
+        return $this->raw;
     }
 
     public function setManual(string $version): void
@@ -96,6 +67,20 @@ class Version implements Versionable
 
     public function noReleases(): bool
     {
-        return empty($this->version) && empty($this->manual);
+        return empty($this->manual) &&
+            $this->major === 0 &&
+            $this->minor === 0 &&
+            $this->patch === 0;
+    }
+
+    protected function parse(): void
+    {
+        if (! empty($this->raw)) {
+            \preg_match('/(\d*)\.(\d*)(\.*(\d*))/i', $this->raw, $matches);
+
+            $this->major = (int) ($matches[1] ?? 0);
+            $this->minor = (int) ($matches[2] ?? 0);
+            $this->patch = (int) ($matches[4] ?? 0);
+        }
     }
 }
