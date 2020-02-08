@@ -1,6 +1,6 @@
 <?php
 
-namespace Helldar\Release\Services;
+namespace Helldar\Publisher\Services;
 
 class Str
 {

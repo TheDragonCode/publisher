@@ -1,15 +1,15 @@
 <?php
 
-namespace Helldar\Release;
+namespace Helldar\Publisher;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;
 use Composer\Plugin\Capability\CommandProvider as CommandProviderCapability;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
-use Helldar\Release\Commands\CommandProvider;
+use Helldar\Publisher\Commands\CommandProvider;
 
-final class Release implements PluginInterface, Capable
+final class Publisher implements PluginInterface, Capable
 {
     public function activate(Composer $composer, IOInterface $io)
     {

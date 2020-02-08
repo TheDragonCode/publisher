@@ -1,6 +1,6 @@
 {
-    "name": "andrey-helldar/release",
-    "description": "Publishes a new version of the release and collects all commits from the previous launch in the description",
+    "name": "andrey-helldar/publisher",
+    "description": "Simple publication and revoke of releases",
     "type": "composer-plugin",
     "minimum-stability": "stable",
     "license": "MIT",
@@ -21,11 +21,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Helldar\\Release\\": "src/"
+            "Helldar\\Publisher\\": "src/"
         }
     },
     "extra": {
-        "class": "Helldar\\Release\\Release"
+        "class": "Helldar\\Publisher\\Publisher"
     },
     "config": {
         "sort-packages": true

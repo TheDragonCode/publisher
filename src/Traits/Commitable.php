@@ -1,12 +1,12 @@
 <?php
 
-namespace Helldar\Release\Traits;
+namespace Helldar\Publisher\Traits;
 
-use Helldar\Release\Contracts\Commits;
+use Helldar\Publisher\Contracts\Commits;
 
 trait Commitable
 {
-    /** @var \Helldar\Release\Contracts\Commits */
+    /** @var \Helldar\Publisher\Contracts\Commits */
     protected $commits_concern;
 
     protected function getCommitsConcern(): Commits

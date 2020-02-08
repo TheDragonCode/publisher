@@ -1,12 +1,12 @@
 <?php
 
-namespace Helldar\Release\Services;
+namespace Helldar\Publisher\Services;
 
 use Github\Client as GithubClient;
-use Helldar\Release\Contracts\Commits as CommitsContract;
-use Helldar\Release\Contracts\Version as VersionContract;
-use Helldar\Release\Traits\Commitable;
-use Helldar\Release\Traits\Versionable;
+use Helldar\Publisher\Contracts\Commits as CommitsContract;
+use Helldar\Publisher\Contracts\Version as VersionContract;
+use Helldar\Publisher\Traits\Commitable;
+use Helldar\Publisher\Traits\Versionable;
 use Http\Adapter\Guzzle6\Client as GuzzleClient;
 
 class Client

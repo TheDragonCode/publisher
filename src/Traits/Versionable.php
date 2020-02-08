@@ -1,12 +1,12 @@
 <?php
 
-namespace Helldar\Release\Traits;
+namespace Helldar\Publisher\Traits;
 
-use Helldar\Release\Contracts\Version;
+use Helldar\Publisher\Contracts\Version;
 
 trait Versionable
 {
-    /** @var \Helldar\Release\Contracts\Version */
+    /** @var \Helldar\Publisher\Contracts\Version */
     protected $version;
 
     public function setVersionConcern(string $concern): void

@@ -1,6 +1,6 @@
 <?php
 
-namespace Helldar\Release\Services;
+namespace Helldar\Publisher\Services;
 
 use Composer\IO\IOInterface;
 use Psr\Log\LogLevel;

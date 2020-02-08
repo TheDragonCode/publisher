@@ -1,13 +1,13 @@
 <?php
 
-namespace Helldar\Release\Entities;
+namespace Helldar\Publisher\Entities;
 
-use Helldar\Release\Contracts\Commits as Commitable;
-use Helldar\Release\Services\Str;
+use Helldar\Publisher\Contracts\Commits as Commitable;
+use Helldar\Publisher\Services\Str;
 
 class Commits implements Commitable
 {
-    /** @var \Helldar\Release\Contracts\Commit[] */
+    /** @var \Helldar\Publisher\Contracts\Commit[] */
     protected $commits = [];
 
     public function push(string $hash, string $message = null): void

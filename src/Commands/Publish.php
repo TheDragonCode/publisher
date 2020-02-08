@@ -1,26 +1,26 @@
 <?php
 
-namespace Helldar\Release\Commands;
+namespace Helldar\Publisher\Commands;
 
 use Composer\Command\BaseCommand;
-use Helldar\Release\Contracts\Commits as CommitsContract;
-use Helldar\Release\Contracts\Version as VersionContract;
-use Helldar\Release\Entities\Commits;
-use Helldar\Release\Entities\Version;
-use Helldar\Release\Services\Client;
-use Helldar\Release\Services\Log;
+use Helldar\Publisher\Contracts\Commits as CommitsContract;
+use Helldar\Publisher\Contracts\Version as VersionContract;
+use Helldar\Publisher\Entities\Commits;
+use Helldar\Publisher\Entities\Version;
+use Helldar\Publisher\Services\Client;
+use Helldar\Publisher\Services\Log;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-final class ReleaseCommand extends BaseCommand
+final class Publish extends BaseCommand
 {
-    /** @var \Helldar\Release\Services\Client */
+    /** @var \Helldar\Publisher\Services\Client */
     protected $client;
 
     /** @var VersionContract */
     protected $last_tag;
 
-    /** @var \Helldar\Release\Services\Log */
+    /** @var \Helldar\Publisher\Services\Log */
     protected $log;
 
     /**
@@ -40,8 +40,8 @@ final class ReleaseCommand extends BaseCommand
     protected function configure()
     {
         $this
-            ->setName('release')
-            ->setDescription('Publishes a new version of the release and collects all commits from the previous launch in the description.');
+            ->setName('publish')
+            ->setDescription('Simple publication and recall of releases.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

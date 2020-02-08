@@ -1,8 +1,8 @@
 <?php
 
-namespace Helldar\Release\Entities;
+namespace Helldar\Publisher\Entities;
 
-use Helldar\Release\Contracts\Version as Versionable;
+use Helldar\Publisher\Contracts\Version as Versionable;
 
 class Version implements Versionable
 {

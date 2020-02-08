@@ -1,6 +1,6 @@
 <?php
 
-namespace Helldar\Release\Contracts;
+namespace Helldar\Publisher\Contracts;
 
 interface Commits
 {

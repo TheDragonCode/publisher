@@ -1,8 +1,8 @@
 <?php
 
-namespace Helldar\Release\Entities;
+namespace Helldar\Publisher\Entities;
 
-use Helldar\Release\Contracts\Commit as Commitable;
+use Helldar\Publisher\Contracts\Commit as Commitable;
 
 class Commit implements Commitable
 {
