@@ -24,4 +24,12 @@ interface Version
     public function getVersionRaw(): ?string;
 
     public function noReleases(): bool;
+
+    public function isDraft(): bool;
+
+    public function setDraft(bool $is_draft = true): void;
+
+    public function isPreRelease(): bool;
+
+    public function setPreRelease(bool $is_prerelease = true): void;
 }

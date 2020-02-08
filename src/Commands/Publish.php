@@ -2,57 +2,23 @@
 
 namespace Helldar\Publisher\Commands;
 
-use Composer\Command\BaseCommand;
-use Helldar\Publisher\Contracts\Commits as CommitsContract;
-use Helldar\Publisher\Contracts\Version as VersionContract;
-use Helldar\Publisher\Entities\Commits;
-use Helldar\Publisher\Entities\Version;
-use Helldar\Publisher\Services\Client;
-use Helldar\Publisher\Services\Log;
+use Helldar\Publisher\Contracts\Commits;
+use Helldar\Publisher\Contracts\Version;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 final class Publish extends BaseCommand
 {
-    /** @var \Helldar\Publisher\Services\Client */
-    protected $client;
-
-    /** @var VersionContract */
-    protected $last_tag;
-
-    /** @var \Helldar\Publisher\Services\Log */
-    protected $log;
-
-    /**
-     * Package owner.
-     *
-     * @var string
-     */
-    protected $owner;
-
-    /**
-     * Package name.
-     *
-     * @var string
-     */
-    protected $name;
-
     protected function configure()
     {
         $this
             ->setName('publish')
-            ->setDescription('Simple publication and recall of releases.');
+            ->setDescription('Simple release publication.');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): void
     {
-        $this->autoload();
-
-        $this->setLog($output);
-        $this->setPackageOwnerName();
-
-        $this->setGithubClient();
-        $this->loadLastTag();
+        parent::execute($input, $output);
 
         $this->pushRelease(
             $this->getNewVersion(),
@@ -60,26 +26,25 @@ final class Publish extends BaseCommand
         );
     }
 
-    protected function loadLastTag(): void
-    {
-        $this->log->info('Loading releases...');
-
-        $this->last_tag = $this->client->lastTag();
-    }
-
-    protected function getCommits(): CommitsContract
+    protected function getCommits(): Commits
     {
         $this->log->info('Loading commits...');
 
         return $this->client->commits($this->last_tag);
     }
 
-    protected function getNewVersion(): VersionContract
+    protected function getNewVersion(): Version
     {
-        $version = $this->askNewVersion();
+        $version = clone $this->last_tag;
+
+        $this->askNewVersion($version);
+        $this->askIsDraft($version);
+        $this->askIsPreRelease($version);
+
+        $text = $this->fullTextVersion($version);
 
         $accept = $this->getIO()
-            ->askConfirmation("Accept " . $version->getVersion() . " version? (yes, y, no or n)" . PHP_EOL);
+            ->askConfirmation("Accept " . $text . " version? (yes, y, no or n)" . PHP_EOL);
 
         if (! $accept) {
             $version = $this->getNewVersion();
@@ -88,28 +53,26 @@ final class Publish extends BaseCommand
         return $version;
     }
 
-    protected function askNewVersion(): VersionContract
+    protected function askNewVersion(Version &$version): void
     {
-        $version = clone $this->last_tag;
-
         $choice = $this->getIO()
-            ->select("Select version for increment (default, " . VersionContract::PATCH . "):", [
-                VersionContract::MAJOR  => 'major',
-                VersionContract::MINOR  => 'minor',
-                VersionContract::PATCH  => 'patch',
-                VersionContract::MANUAL => 'manual',
-            ], VersionContract::PATCH);
+            ->select("Select version for increment (default, " . Version::PATCH . "):", [
+                Version::MAJOR  => 'major',
+                Version::MINOR  => 'minor',
+                Version::PATCH  => 'patch',
+                Version::MANUAL => 'manual',
+            ], Version::PATCH);
 
         switch ($choice) {
-            case VersionContract::MAJOR:
+            case Version::MAJOR:
                 $version->incrementMajor();
                 break;
 
-            case VersionContract::MINOR:
+            case Version::MINOR:
                 $version->incrementMinor();
                 break;
 
-            case VersionContract::PATCH:
+            case Version::PATCH:
                 $version->incrementPatch();
                 break;
 
@@ -118,19 +81,46 @@ final class Publish extends BaseCommand
                     $this->getIO()->ask('Input new package version: ')
                 );
         }
-
-        return $version;
     }
 
-    protected function setGithubClient(): void
+    protected function askIsDraft(Version &$version): void
     {
-        $this->client = new Client($this->owner, $this->name);
+        $accept = $this->getIO()
+            ->askConfirmation('Is this a draft? (yes, y, no or n)' . PHP_EOL);
 
-        $this->client->setVersionConcern(Version::class);
-        $this->client->setCommitsConcern(Commits::class);
+        if ($accept) {
+            $version->setDraft();
+        }
     }
 
-    protected function pushRelease(VersionContract $version, CommitsContract $commits): void
+    protected function askIsPreRelease(Version &$version): void
+    {
+        $accept = $this->getIO()
+            ->askConfirmation('Is this a prerelease? (yes, y, no or n)' . PHP_EOL);
+
+        if ($accept) {
+            $version->setPreRelease();
+        }
+    }
+
+    protected function fullTextVersion(Version $version): string
+    {
+        $options = [];
+
+        if ($version->isDraft()) {
+            $options[] = 'draft';
+        }
+
+        if ($version->isPreRelease()) {
+            $options[] = 'prerelease';
+        }
+
+        return empty($options)
+            ? $version->getVersion()
+            : \sprintf('%s (%s)', $version->getVersion(), \implode(', ', $options));
+    }
+
+    protected function pushRelease(Version $version, Commits $commits): void
     {
         $this->log->info('Publishing a new version ...');
         $this->log->info('Version: ' . $version->getVersion());
@@ -140,48 +130,5 @@ final class Publish extends BaseCommand
         $this->log->info(
             $this->client->createTag($version, $commits)
         );
-    }
-
-    protected function package()
-    {
-        return $this->getComposer()->getPackage();
-    }
-
-    /**
-     * @return string|null
-     */
-    protected function packageName(): ?string
-    {
-        return $this->package()->getName();
-    }
-
-    protected function url(): ?string
-    {
-        return $this->package()->getSourceUrl();
-    }
-
-    protected function setPackageOwnerName()
-    {
-        $package = $this->packageName();
-
-        [$owner, $name] = \explode('/', $package);
-
-        $this->owner = $owner;
-        $this->name  = $name;
-
-        $this->log->info('Package name: ' . $package);
-        $this->log->info('');
-    }
-
-    protected function setLog(OutputInterface $output)
-    {
-        $this->log = new Log($this->getIO(), $output);
-    }
-
-    protected function autoload()
-    {
-        $vendor_dir = $this->getComposer()->getConfig()->get('vendor-dir');
-
-        require_once $vendor_dir . '/autoload.php';
     }
 }

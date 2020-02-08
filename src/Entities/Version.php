@@ -21,6 +21,12 @@ class Version implements Versionable
     /** @var string|null */
     protected $manual;
 
+    /** @var bool */
+    protected $draft = false;
+
+    /** @var bool */
+    protected $prerelease = false;
+
     public function __construct(string $version = null)
     {
         $this->raw = $version;
@@ -71,6 +77,26 @@ class Version implements Versionable
             $this->major === 0 &&
             $this->minor === 0 &&
             $this->patch === 0;
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->draft;
+    }
+
+    public function setDraft(bool $is_draft = true): void
+    {
+        $this->draft = $is_draft;
+    }
+
+    public function isPreRelease(): bool
+    {
+        return $this->prerelease;
+    }
+
+    public function setPreRelease(bool $is_prerelease = true): void
+    {
+        $this->prerelease = $is_prerelease;
     }
 
     protected function parse(): void

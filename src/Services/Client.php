@@ -78,11 +78,13 @@ class Client
             $this->client->repository()
                 ->releases()
                 ->create($this->owner, $this->name, [
-                    'tag_name' => $version->getVersion(),
-                    'body'     => $commits->toText(),
+                    'tag_name'   => $version->getVersion(),
+                    'draft'      => $version->isDraft(),
+                    'prerelease' => $version->isPreRelease(),
+                    'body'       => $commits->toText(),
                 ]);
 
-            return 'Tag created successfully';
+            return \sprintf('Tag %s created successfully', $version->getVersion());
         }
         catch (\Exception $exception) {
             return $exception->getMessage();
