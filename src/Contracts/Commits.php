@@ -13,6 +13,7 @@ interface Commits
         'updated',
         'change',
         'changed',
+        'move'
     ];
     const CONTAINS_FIXED = [
         'fix',
