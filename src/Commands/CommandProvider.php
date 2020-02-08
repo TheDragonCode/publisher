@@ -10,6 +10,7 @@ final class CommandProvider implements CommandProviderCapability
     {
         return [
             new Publish(),
+            new Unpublish(),
         ];
     }
 }

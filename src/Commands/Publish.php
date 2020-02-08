@@ -47,7 +47,7 @@ final class Publish extends BaseCommand
             ->askConfirmation("Accept " . $text . " version? (yes, y, no or n)" . PHP_EOL);
 
         if (! $accept) {
-            $version = $this->getNewVersion();
+            return $this->getNewVersion();
         }
 
         return $version;
@@ -56,7 +56,7 @@ final class Publish extends BaseCommand
     protected function askNewVersion(Version &$version): void
     {
         $choice = $this->getIO()
-            ->select("Select version for increment (default, " . Version::PATCH . "):", [
+            ->select('Select version for increment (default, ' . Version::PATCH . '):', [
                 Version::MAJOR  => 'major',
                 Version::MINOR  => 'minor',
                 Version::PATCH  => 'patch',

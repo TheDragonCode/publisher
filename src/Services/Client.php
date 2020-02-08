@@ -5,6 +5,7 @@ namespace Helldar\Publisher\Services;
 use Github\Client as GithubClient;
 use Helldar\Publisher\Contracts\Commits as CommitsContract;
 use Helldar\Publisher\Contracts\Version as VersionContract;
+use Helldar\Publisher\Contracts\Versions;
 use Helldar\Publisher\Traits\Commitable;
 use Helldar\Publisher\Traits\Versionable;
 use Http\Adapter\Guzzle6\Client as GuzzleClient;
@@ -48,6 +49,33 @@ class Client
         }
     }
 
+    public function latestTags(): Versions
+    {
+        try {
+            $tags = $this->client->repository()->releases()->all($this->owner, $this->name);
+
+            $versions = $this->getVersionsConcern();
+
+            foreach ($tags as $tag) {
+                if ($versions->count() > 10) {
+                    break;
+                }
+
+                $versions->push(
+                    $tag['tag_name'] ?? null,
+                    $tag['id'] ?? null,
+                    $tag['draft'] ?? false,
+                    $tag['prerelease'] ?? false
+                );
+            }
+
+            return $versions;
+        }
+        catch (\Exception $exception) {
+            return $this->getVersionsConcern();
+        }
+    }
+
     public function commits(VersionContract $version): CommitsContract
     {
         try {
@@ -85,6 +113,20 @@ class Client
                 ]);
 
             return \sprintf('Tag %s created successfully', $version->getVersion());
+        }
+        catch (\Exception $exception) {
+            return $exception->getMessage();
+        }
+    }
+
+    public function revokeTag(VersionContract $version): string
+    {
+        try {
+            $this->client->repository()
+                ->releases()
+                ->remove($this->owner, $this->name, $version->getId());
+
+            return \sprintf('Version %s has been successfully revoked', $version->getVersionRaw());
         }
         catch (\Exception $exception) {
             return $exception->getMessage();

@@ -7,6 +7,7 @@ use Composer\Package\RootPackageInterface;
 use Helldar\Publisher\Contracts\Version as VersionContract;
 use Helldar\Publisher\Entities\Commits;
 use Helldar\Publisher\Entities\Version;
+use Helldar\Publisher\Entities\Versions;
 use Helldar\Publisher\Services\Client;
 use Helldar\Publisher\Services\Log;
 use Symfony\Component\Console\Input\InputInterface;
@@ -58,6 +59,7 @@ abstract class BaseCommand extends ComposerBaseCommand
         $this->client = new Client($this->owner, $this->name);
 
         $this->client->setVersionConcern(Version::class);
+        $this->client->setVersionsConcern(Versions::class);
         $this->client->setCommitsConcern(Commits::class);
     }
 

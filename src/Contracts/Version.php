@@ -9,7 +9,7 @@ interface Version
     public const MINOR = 2;
     public const PATCH = 3;
 
-    public function __construct(string $version = null);
+    public function __construct(string $version = null, int $id = null, bool $is_draft = false, bool $is_prerelease = false);
 
     public function incrementMajor(): void;
 
@@ -32,4 +32,6 @@ interface Version
     public function isPreRelease(): bool;
 
     public function setPreRelease(bool $is_prerelease = true): void;
+
+    public function getId(): ?int;
 }

@@ -6,6 +6,9 @@ use Helldar\Publisher\Contracts\Version as Versionable;
 
 class Version implements Versionable
 {
+    /** @var int|null */
+    protected $id;
+
     /** @var string|null */
     protected $raw;
 
@@ -27,9 +30,12 @@ class Version implements Versionable
     /** @var bool */
     protected $prerelease = false;
 
-    public function __construct(string $version = null)
+    public function __construct(string $version = null, int $id = null, bool $is_draft = false, bool $is_prerelease = false)
     {
-        $this->raw = $version;
+        $this->id         = $id;
+        $this->raw        = $version;
+        $this->draft      = $is_draft;
+        $this->prerelease = $is_prerelease;
 
         $this->parse();
     }
@@ -97,6 +103,11 @@ class Version implements Versionable
     public function setPreRelease(bool $is_prerelease = true): void
     {
         $this->prerelease = $is_prerelease;
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
     }
 
     protected function parse(): void
