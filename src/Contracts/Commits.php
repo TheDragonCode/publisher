@@ -18,10 +18,6 @@ interface Commits
         'fix',
         'fixed',
     ];
-    const EXCLUDE = [
-//        'merge pull request',
-//        '/analysis-',
-    ];
     const EXCLUDE_COMMITERS = [
         'web-flow',
     ];
