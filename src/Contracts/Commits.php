@@ -19,15 +19,22 @@ interface Commits
         'fixed',
     ];
     const EXCLUDE = [
-        'merge pull request',
-        '/analysis-',
+//        'merge pull request',
+//        '/analysis-',
+    ];
+    const EXCLUDE_COMMITERS = [
+        'web-flow',
     ];
     const TYPE_ADDED = 'Added';
     const TYPE_CHANGED = 'Changed';
     const TYPE_FIXED = 'Fixed';
     const TYPE_OTHER = 'Other';
 
-    public function push(string $hash, string $message = null): void;
+    public function push(string $hash, string $message = null, string $committer_login = null): void;
 
     public function count(): int;
+
+    public function grouped(): array;
+
+    public function toText(): ?string;
 }

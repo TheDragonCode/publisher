@@ -9,4 +9,6 @@ interface Commit
     public function getMessage(): ?string;
 
     public function getHash(): string;
+
+    public function getCommitterLogin(): string;
 }

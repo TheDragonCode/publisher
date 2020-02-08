@@ -10,14 +10,68 @@ class Commits implements Commitable
     /** @var \Helldar\Publisher\Contracts\Commit[] */
     protected $commits = [];
 
-    public function push(string $hash, string $message = null): void
+    /** @var array */
+    protected $groups = [];
+
+    public function push(string $hash, string $message = null, string $committer_login = null): void
     {
-        $this->commits[] = new Commit($hash, $message);
+        $this->commits[] = new Commit($hash, $message, $committer_login);
     }
 
     public function count(): int
     {
         return \count($this->commits);
+    }
+
+    public function toText(): ?string
+    {
+        $text = '';
+
+        foreach ($this->grouped() as $group_name => $values) {
+            $text .= \sprintf('## %s%s', $group_name, PHP_EOL);
+
+            foreach ($values as $message => $hashes) {
+                $text .= \sprintf('* %s (%s)%s', $message, \implode(', ', $hashes), PHP_EOL);
+            }
+
+            $text .= PHP_EOL;
+        }
+
+        return $text;
+    }
+
+    public function grouped(): array
+    {
+        if (empty($this->groups)) {
+            $this->groups = $this->grouping();
+        }
+
+        return $this->groups;
+    }
+
+    protected function grouping(): array
+    {
+        $groups = [];
+
+        foreach ($this->commits as $commit) {
+            if (\in_array($commit->getCommitterLogin(), static::EXCLUDE_COMMITERS)) {
+                continue;
+            }
+
+            $message = $commit->getMessage();
+            $hash    = $commit->getHash();
+            $type    = $this->type($message);
+
+            if (isset($groups[$type][$message])) {
+                $groups[$type][$message][] = $hash;
+            } else {
+                $groups[$type][$message] = [$hash];
+            }
+        }
+
+        \ksort($groups);
+
+        return $groups;
     }
 
     protected function contains(string $message, array $values): bool

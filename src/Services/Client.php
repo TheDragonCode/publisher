@@ -51,17 +51,17 @@ class Client
     public function commits(VersionContract $version): CommitsContract
     {
         try {
-            $response = $version->noReleases()
+            $commits = $version->noReleases()
                 ? $this->getAllCommits()
-                : $this->getCompareCommits($version->getVersionRaw());
+                : $this->getCompareCommits($version->getVersionRaw())['commits'];
 
-            $commits = $response['commits'] ?? [];
             $concern = $this->getCommitsConcern();
 
             foreach ($commits as $commit) {
                 $concern->push(
                     $commit['sha'] ?? null,
-                    $commit['commit']['message'] ?? null
+                    $commit['commit']['message'] ?? null,
+                    $commit['committer']['login'] ?? null
                 );
             }
 
@@ -79,6 +79,7 @@ class Client
                 ->releases()
                 ->create($this->owner, $this->name, [
                     'tag_name' => $version->getVersion(),
+                    'body'     => $commits->toText(),
                 ]);
 
             return 'Tag created successfully';
@@ -110,6 +111,6 @@ class Client
             new GuzzleClient()
         );
 
-        $this->client->authenticate('425e8ff748b36ea628e716fceeedee26a50c0ead', GithubClient::AUTH_HTTP_TOKEN);
+        $this->client->authenticate('ea0d76bc64ee8a958bf5429aa8574e3057372884', GithubClient::AUTH_HTTP_TOKEN);
     }
 }
