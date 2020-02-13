@@ -4,11 +4,13 @@ namespace Helldar\Publisher\Commands;
 
 use Composer\Command\BaseCommand as ComposerBaseCommand;
 use Composer\Package\RootPackageInterface;
+use Helldar\Publisher\Contracts\RemoteFilesystem;
 use Helldar\Publisher\Contracts\Version as VersionContract;
 use Helldar\Publisher\Entities\Commits;
 use Helldar\Publisher\Entities\Version;
 use Helldar\Publisher\Entities\Versions;
 use Helldar\Publisher\Services\Client;
+use Helldar\Publisher\Services\Filesystem;
 use Helldar\Publisher\Services\Log;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -56,11 +58,16 @@ abstract class BaseCommand extends ComposerBaseCommand
 
     protected function setGithubClient(): void
     {
-        $this->client = new Client($this->owner, $this->name);
+        $this->client = new Client($this->getRemoteFilesystem(), $this->owner, $this->name);
 
         $this->client->setVersionConcern(Version::class);
         $this->client->setVersionsConcern(Versions::class);
         $this->client->setCommitsConcern(Commits::class);
+    }
+
+    protected function getRemoteFilesystem(): RemoteFilesystem
+    {
+        return new Filesystem($this->getComposer(), $this->getIO());
     }
 
     protected function loadLastTag(): void

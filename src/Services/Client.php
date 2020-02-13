@@ -2,18 +2,20 @@
 
 namespace Helldar\Publisher\Services;
 
-use Github\Client as GithubClient;
 use Helldar\Publisher\Contracts\Commits as CommitsContract;
+use Helldar\Publisher\Contracts\RemoteFilesystem;
 use Helldar\Publisher\Contracts\Version as VersionContract;
 use Helldar\Publisher\Contracts\Versions;
 use Helldar\Publisher\Traits\Commitable;
 use Helldar\Publisher\Traits\Versionable;
-use Http\Adapter\Guzzle6\Client as GuzzleClient;
 
 class Client
 {
     use Versionable;
     use Commitable;
+
+    /** @var \Helldar\Publisher\Contracts\RemoteFilesystem */
+    protected $rfs;
 
     /** @var \Github\Client */
     protected $client;
@@ -27,16 +29,30 @@ class Client
     /** @var string|null */
     protected $date;
 
-    public function __construct(string $package_owner = null, string $package_name = null)
+    protected $origin_url = 'github.com';
+
+    protected $api_url = 'https://api.github.com';
+
+    public function __construct(RemoteFilesystem $rfs, string $package_owner = null, string $package_name = null)
     {
         $this->owner = $package_owner;
         $this->name  = $package_name;
 
-        $this->configure();
+        $this->rfs = $rfs;
+        $this->rfs->setOrigin($this->origin_url);
+        $this->rfs->setApiUrl($this->api_url);
     }
 
     public function lastTag(): VersionContract
     {
+        $url = $this->formatUrl('repos/:owner/:repo/releases/latest');
+
+        $result = [
+            'foo'    => 'bar',
+            'result' => $this->rfs->get($url),
+        ];
+        die(json_encode($result));
+
         try {
             $tag = $this->client->repository()->releases()->latest($this->owner, $this->name);
 
@@ -149,12 +165,12 @@ class Client
             ->all($this->owner, $this->name, $params);
     }
 
-    protected function configure()
+    protected function formatUrl(string $url): string
     {
-        $this->client = GithubClient::createWithHttpClient(
-            new GuzzleClient()
+        return \str_replace(
+            [':owner', ':repo'],
+            [\rawurlencode($this->owner), \rawurlencode($this->name)],
+            $url
         );
-
-        $this->client->authenticate('ea0d76bc64ee8a958bf5429aa8574e3057372884', GithubClient::AUTH_HTTP_TOKEN);
     }
 }
