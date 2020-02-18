@@ -6,11 +6,8 @@ use Composer\Composer;
 use Composer\Downloader\TransportException;
 use Composer\Factory;
 use Composer\IO\IOInterface;
-use Composer\Plugin\PluginEvents;
-use Composer\Plugin\PreFileDownloadEvent;
 use Composer\Util\RemoteFilesystem;
 use Helldar\Publisher\Contracts\RemoteFilesystem as RemoteFilesystemContract;
-use Hirak\Prestissimo\CurlRemoteFilesystem;
 
 class Filesystem implements RemoteFilesystemContract
 {
@@ -32,18 +29,23 @@ class Filesystem implements RemoteFilesystemContract
         $this->io       = $io;
     }
 
-    public function get(string $relative_url, array $parameters = null)
+    public function get(string $relative_url, array $parameters = null): array
     {
-        $url = $parameters
+        $url = ! empty($parameters)
             ? $relative_url . '?' . \http_build_query($parameters)
             : $relative_url;
 
         return $this->call('GET', $url);
     }
 
-    public function post(string $relative_url, array $parameters)
+    public function post(string $relative_url, array $parameters): array
     {
         return $this->call('POST', $relative_url, $parameters);
+    }
+
+    public function delete(string $relative_url): array
+    {
+        return $this->call('DELETE', $relative_url);
     }
 
     public function setOrigin(string $host): void
@@ -56,7 +58,7 @@ class Filesystem implements RemoteFilesystemContract
         $this->api_url = $url;
     }
 
-    protected function call(string $method, string $relative_url, array $parameters = []): string
+    protected function call(string $method, string $relative_url, array $parameters = []): array
     {
         $url     = $this->getUrl($relative_url);
         $result  = $this->getContent($method, $url, $parameters);
@@ -75,13 +77,17 @@ class Filesystem implements RemoteFilesystemContract
 
     protected function getContent(string $method, string $url, array $parameters = [])
     {
-        return $this->rfs($url)->getContents($this->origin, $url, false, [
-            'http' => [
-                'method'  => $method,
-                'header'  => ['Accept: application/vnd.github.v3+json'],
-                'content' => \json_encode(['query' => $parameters]),
-            ],
-        ]);
+        return $this->rfs()
+            ->getContents($this->origin, $url, false, [
+                'http' => [
+                    'method'  => $method,
+                    'header'  => [
+                        'Accept: application/vnd.github.v3+json',
+                        'Authorization: token OAUTH-TOKEN',
+                    ],
+                    'content' => \json_encode(['query' => $parameters]),
+                ],
+            ]);
     }
 
     protected function decodeResult(string $result): array
@@ -89,7 +95,7 @@ class Filesystem implements RemoteFilesystemContract
         return \json_decode($result, true);
     }
 
-    protected function parseContent(array $content)
+    protected function parseContent(array $content): array
     {
         if ($content['errors'][0]['message'] ?? false) {
             if ($content['data'] ?? false) {
@@ -105,25 +111,8 @@ class Filesystem implements RemoteFilesystemContract
         return $content['data'] ?? [];
     }
 
-    protected function rfs(string $url): RemoteFilesystem
+    protected function rfs(): RemoteFilesystem
     {
-        $rfs = Factory::createRemoteFilesystem($this->io, $this->composer->getConfig());
-
-        if ($event_dispatcher = $this->composer->getEventDispatcher()) {
-            $pre_file_download_event = $this->preFileDownloadEvent($rfs, $url);
-
-            $event_dispatcher->dispatch($pre_file_download_event->getName(), $pre_file_download_event);
-
-            if (! $pre_file_download_event->getRemoteFilesystem() instanceof CurlRemoteFilesystem) {
-                $rfs = $pre_file_download_event->getRemoteFilesystem();
-            }
-        }
-
-        return $rfs;
-    }
-
-    protected function preFileDownloadEvent(RemoteFilesystem $rfs, string $url): PreFileDownloadEvent
-    {
-        return new PreFileDownloadEvent(PluginEvents::PRE_FILE_DOWNLOAD, $rfs, $url);
+        return Factory::createRemoteFilesystem($this->io, $this->composer->getConfig());
     }
 }

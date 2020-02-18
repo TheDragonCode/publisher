@@ -75,6 +75,10 @@ abstract class BaseCommand extends ComposerBaseCommand
         $this->log->info('Loading releases...');
 
         $this->last_tag = $this->client->lastTag();
+
+        if ($this->last_tag->noReleases()) {
+            $this->log->info('No releases found');
+        }
     }
 
     protected function package(): RootPackageInterface
@@ -94,15 +98,38 @@ abstract class BaseCommand extends ComposerBaseCommand
 
     protected function setPackageOwnerName(): void
     {
+        if (! ($package = $this->parseSourceUrl())) {
+            $package = $this->parsePackageName();
+        }
+
+        $this->owner = $package['owner'] ?? null;
+        $this->name  = $package['name'] ?? null;
+
+        $this->log->info('Package name: ' . \implode('/', $package));
+        $this->log->info('');
+    }
+
+    protected function parsePackageName(): array
+    {
         $package = $this->packageName();
 
         [$owner, $name] = \explode('/', $package);
 
-        $this->owner = $owner;
-        $this->name  = $name;
+        return \compact('owner', 'name');
+    }
 
-        $this->log->info('Package name: ' . $package);
-        $this->log->info('');
+    protected function parseSourceUrl(): ?array
+    {
+        \preg_match('/\w*:\/\/github\.com\/(\w+)\/(\w+)\/*(\.git)*/i', $this->url(), $matches);
+
+        if (empty($matches)) {
+            return null;
+        }
+
+        $owner = $matches[1] ?? null;
+        $name  = $matches[2] ?? null;
+
+        return \compact('owner', 'name');
     }
 
     protected function autoload(): void

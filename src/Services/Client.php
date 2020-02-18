@@ -2,7 +2,7 @@
 
 namespace Helldar\Publisher\Services;
 
-use Helldar\Publisher\Contracts\Commits as CommitsContract;
+use Helldar\Publisher\Contracts\Commits;
 use Helldar\Publisher\Contracts\RemoteFilesystem;
 use Helldar\Publisher\Contracts\Version as VersionContract;
 use Helldar\Publisher\Contracts\Versions;
@@ -16,9 +16,6 @@ class Client
 
     /** @var \Helldar\Publisher\Contracts\RemoteFilesystem */
     protected $rfs;
-
-    /** @var \Github\Client */
-    protected $client;
 
     /** @var string|null Package name */
     protected $owner;
@@ -45,19 +42,13 @@ class Client
 
     public function lastTag(): VersionContract
     {
-        $url = $this->formatUrl('repos/:owner/:repo/releases/latest');
-
-        $result = [
-            'foo'    => 'bar',
-            'result' => $this->rfs->get($url),
-        ];
-        die(json_encode($result));
-
         try {
-            $tag = $this->client->repository()->releases()->latest($this->owner, $this->name);
+            $result = $this->rfs->get(
+                $this->formatUrl('repos/:owner/:repo/releases/latest')
+            );
 
             return $this->getVersionConcern(
-                $tag['tag_name'] ?? null
+                $result['tag_name'] ?? $result['name'] ?? null
             );
         }
         catch (\Exception $exception) {
@@ -68,7 +59,9 @@ class Client
     public function latestTags(): Versions
     {
         try {
-            $tags = $this->client->repository()->releases()->all($this->owner, $this->name);
+            $tags = $this->rfs->get(
+                $this->formatUrl('repos/:owner/:repo/releases')
+            );
 
             $versions = $this->getVersionsConcern();
 
@@ -92,7 +85,7 @@ class Client
         }
     }
 
-    public function commits(VersionContract $version): CommitsContract
+    public function commits(VersionContract $version): Commits
     {
         try {
             $commits = $version->noReleases()
@@ -105,7 +98,7 @@ class Client
                 $concern->push(
                     $commit['sha'] ?? null,
                     $commit['commit']['message'] ?? null,
-                    $commit['committer']['login'] ?? null
+                    $commit['author']['login'] ?? null
                 );
             }
 
@@ -116,17 +109,19 @@ class Client
         }
     }
 
-    public function createTag(VersionContract $version, CommitsContract $commits): string
+    public function createTag(VersionContract $version, Commits $commits): string
     {
         try {
-            $this->client->repository()
-                ->releases()
-                ->create($this->owner, $this->name, [
+            $this->rfs->post(
+                $this->formatUrl('repos/:owner/:repo/releases'),
+                [
                     'tag_name'   => $version->getVersion(),
+                    'name'       => $version->getVersion(),
                     'draft'      => $version->isDraft(),
                     'prerelease' => $version->isPreRelease(),
                     'body'       => $commits->toText(),
-                ]);
+                ]
+            );
 
             return \sprintf('Tag %s created successfully', $version->getVersion());
         }
@@ -138,9 +133,9 @@ class Client
     public function revokeTag(VersionContract $version): string
     {
         try {
-            $this->client->repository()
-                ->releases()
-                ->remove($this->owner, $this->name, $version->getId());
+            $this->rfs->get(
+                $this->formatUrl('repos/:owner/:repo/releases/' . $version->getId())
+            );
 
             return \sprintf('Version %s has been successfully revoked', $version->getVersionRaw());
         }
@@ -151,18 +146,27 @@ class Client
 
     protected function getCompareCommits(string $version): array
     {
-        return $this->client->repository()
-            ->commits()
-            ->compare($this->owner, $this->name, $version, 'master');
+        try {
+            return $this->rfs->get(
+                $this->formatUrl("repos/:owner/:repo/compare/{$version}...master")
+            );
+        }
+        catch (\Exception $exception) {
+            return [];
+        }
     }
 
     protected function getAllCommits(): array
     {
-        $params = ['sha' => 'master'];
-
-        return $this->client->repository()
-            ->commits()
-            ->all($this->owner, $this->name, $params);
+        try {
+            return $this->rfs->get(
+                $this->formatUrl('repos/:owner/:repo/commits'),
+                ['sha' => 'master']
+            );
+        }
+        catch (\Exception $exception) {
+            return [];
+        }
     }
 
     protected function formatUrl(string $url): string
