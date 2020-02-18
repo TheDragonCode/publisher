@@ -93,6 +93,10 @@ class Commits implements Commitable
             return static::TYPE_CHANGED;
         }
 
+        if ($this->contains($message, static::CONTAINS_REMOVED)) {
+            return static::TYPE_REMOVED;
+        }
+
         return static::TYPE_OTHER;
     }
 }

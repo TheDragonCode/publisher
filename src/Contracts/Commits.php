@@ -8,17 +8,26 @@ interface Commits
         'add',
         'added',
     ];
+
     const CONTAINS_CHANGED = [
         'update',
         'updated',
         'change',
         'changed',
-        'move'
+        'move',
     ];
+
     const CONTAINS_FIXED = [
         'fix',
         'fixed',
     ];
+
+    const CONTAINS_REMOVED = [
+        'removed',
+        'deleted',
+        'delete',
+    ];
+
     const EXCLUDE_COMMITERS = [
         'web-flow',
     ];
@@ -26,6 +35,7 @@ interface Commits
     const TYPE_CHANGED = 'Changed';
     const TYPE_FIXED = 'Fixed';
     const TYPE_OTHER = 'Other';
+    const TYPE_REMOVED = 'Removed';
 
     public function push(string $hash, string $message = null, string $committer_login = null): void;
 
