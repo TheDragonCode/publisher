@@ -14,7 +14,7 @@
         "php": "^7.1",
         "ext-json": "*",
         "composer-plugin-api": "^1.1",
-        "composer/composer": "*"
+        "composer/composer": "^1.10"
     },
     "autoload": {
         "psr-4": {
