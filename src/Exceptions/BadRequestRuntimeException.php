@@ -2,7 +2,9 @@
 
 namespace Helldar\Publisher\Exceptions;
 
-class BadRequestRuntimeException extends \RuntimeException
+use RuntimeException;
+
+class BadRequestRuntimeException extends RuntimeException
 {
     public function __construct(string $message)
     {

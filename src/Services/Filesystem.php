@@ -32,7 +32,7 @@ class Filesystem implements RemoteFilesystemContract
     public function get(string $relative_url, array $parameters = null): array
     {
         $url = ! empty($parameters)
-            ? $relative_url . '?' . \http_build_query($parameters)
+            ? $relative_url . '?' . http_build_query($parameters)
             : $relative_url;
 
         return $this->call('GET', $url);
@@ -69,8 +69,8 @@ class Filesystem implements RemoteFilesystemContract
 
     protected function getUrl(string $relative_url): string
     {
-        $api_url      = \rtrim($this->api_url, '/');
-        $relative_url = \ltrim($relative_url, '/');
+        $api_url      = rtrim($this->api_url, '/');
+        $relative_url = ltrim($relative_url, '/');
 
         return $api_url . '/' . $relative_url;
     }
@@ -85,14 +85,14 @@ class Filesystem implements RemoteFilesystemContract
                         'Accept: application/vnd.github.v3+json',
                         'Authorization: token OAUTH-TOKEN',
                     ],
-                    'content' => \json_encode(['query' => $parameters]),
+                    'content' => json_encode(['query' => $parameters]),
                 ],
             ]);
     }
 
     protected function decodeResult(string $result): array
     {
-        return \json_decode($result, true);
+        return json_decode($result, true);
     }
 
     protected function parseContent(array $content): array

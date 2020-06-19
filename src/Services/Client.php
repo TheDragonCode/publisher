@@ -2,6 +2,7 @@
 
 namespace Helldar\Publisher\Services;
 
+use Exception;
 use Helldar\Publisher\Contracts\Commits;
 use Helldar\Publisher\Contracts\RemoteFilesystem;
 use Helldar\Publisher\Contracts\Version as VersionContract;
@@ -51,7 +52,7 @@ class Client
                 $result['tag_name'] ?? $result['name'] ?? null
             );
         }
-        catch (\Exception $exception) {
+        catch (Exception $exception) {
             return $this->getVersionConcern();
         }
     }
@@ -80,7 +81,7 @@ class Client
 
             return $versions;
         }
-        catch (\Exception $exception) {
+        catch (Exception $exception) {
             return $this->getVersionsConcern();
         }
     }
@@ -104,7 +105,7 @@ class Client
 
             return $concern;
         }
-        catch (\Exception $exception) {
+        catch (Exception $exception) {
             return $this->getCommitsConcern();
         }
     }
@@ -123,9 +124,9 @@ class Client
                 ]
             );
 
-            return \sprintf('Tag %s created successfully', $version->getVersion());
+            return sprintf('Tag %s created successfully', $version->getVersion());
         }
-        catch (\Exception $exception) {
+        catch (Exception $exception) {
             return $exception->getMessage();
         }
     }
@@ -137,9 +138,9 @@ class Client
                 $this->formatUrl('repos/:owner/:repo/releases/' . $version->getId())
             );
 
-            return \sprintf('Version %s has been successfully revoked', $version->getVersionRaw());
+            return sprintf('Version %s has been successfully revoked', $version->getVersionRaw());
         }
-        catch (\Exception $exception) {
+        catch (Exception $exception) {
             return $exception->getMessage();
         }
     }
@@ -151,7 +152,7 @@ class Client
                 $this->formatUrl("repos/:owner/:repo/compare/{$version}...master")
             );
         }
-        catch (\Exception $exception) {
+        catch (Exception $exception) {
             return [];
         }
     }
@@ -164,16 +165,16 @@ class Client
                 ['sha' => 'master']
             );
         }
-        catch (\Exception $exception) {
+        catch (Exception $exception) {
             return [];
         }
     }
 
     protected function formatUrl(string $url): string
     {
-        return \str_replace(
+        return str_replace(
             [':owner', ':repo'],
-            [\rawurlencode($this->owner), \rawurlencode($this->name)],
+            [rawurlencode($this->owner), rawurlencode($this->name)],
             $url
         );
     }

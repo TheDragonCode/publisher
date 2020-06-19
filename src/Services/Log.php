@@ -42,8 +42,8 @@ class Log
     /**
      * Logs with an arbitrary level.
      *
-     * @param mixed $level
-     * @param string $message
+     * @param  mixed  $level
+     * @param  string  $message
      */
     public function log($level, $message)
     {

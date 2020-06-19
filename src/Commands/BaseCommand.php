@@ -105,7 +105,7 @@ abstract class BaseCommand extends ComposerBaseCommand
         $this->owner = $package['owner'] ?? null;
         $this->name  = $package['name'] ?? null;
 
-        $this->log->info('Package name: ' . \implode('/', $package));
+        $this->log->info('Package name: ' . implode('/', $package));
         $this->log->info('');
     }
 
@@ -113,14 +113,14 @@ abstract class BaseCommand extends ComposerBaseCommand
     {
         $package = $this->packageName();
 
-        [$owner, $name] = \explode('/', $package);
+        [$owner, $name] = explode('/', $package);
 
-        return \compact('owner', 'name');
+        return compact('owner', 'name');
     }
 
     protected function parseSourceUrl(): ?array
     {
-        \preg_match('/\w*:\/\/github\.com\/(\w+)\/(\w+)\/*(\.git)*/i', $this->url(), $matches);
+        preg_match('/\w*:\/\/github\.com\/(\w+)\/(\w+)\/*(\.git)*/i', $this->url(), $matches);
 
         if (empty($matches)) {
             return null;
@@ -129,7 +129,7 @@ abstract class BaseCommand extends ComposerBaseCommand
         $owner = $matches[1] ?? null;
         $name  = $matches[2] ?? null;
 
-        return \compact('owner', 'name');
+        return compact('owner', 'name');
     }
 
     protected function autoload(): void

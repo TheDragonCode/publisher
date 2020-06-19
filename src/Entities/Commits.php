@@ -20,7 +20,7 @@ class Commits implements Commitable
 
     public function count(): int
     {
-        return \count($this->commits);
+        return count($this->commits);
     }
 
     public function toText(): ?string
@@ -28,10 +28,10 @@ class Commits implements Commitable
         $text = '';
 
         foreach ($this->grouped() as $group_name => $values) {
-            $text .= \sprintf('## %s%s', $group_name, PHP_EOL);
+            $text .= sprintf('## %s%s', $group_name, PHP_EOL);
 
             foreach ($values as $message => $hashes) {
-                $text .= \sprintf('* %s (%s)%s', $message, \implode(', ', $hashes), PHP_EOL);
+                $text .= sprintf('* %s (%s)%s', $message, implode(', ', $hashes), PHP_EOL);
             }
 
             $text .= PHP_EOL;
@@ -54,7 +54,7 @@ class Commits implements Commitable
         $groups = [];
 
         foreach ($this->commits as $commit) {
-            if (\in_array($commit->getCommitterLogin(), static::EXCLUDE_COMMITERS)) {
+            if (in_array($commit->getCommitterLogin(), static::EXCLUDE_COMMITERS)) {
                 continue;
             }
 
@@ -69,7 +69,7 @@ class Commits implements Commitable
             }
         }
 
-        \ksort($groups);
+        ksort($groups);
 
         return $groups;
     }

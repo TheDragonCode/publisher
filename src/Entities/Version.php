@@ -61,7 +61,7 @@ class Version implements Versionable
     public function getVersion(): ?string
     {
         return empty($this->manual)
-            ? \sprintf('v%s.%s.%s', $this->major, $this->minor, $this->patch)
+            ? sprintf('v%s.%s.%s', $this->major, $this->minor, $this->patch)
             : $this->manual;
     }
 
@@ -113,7 +113,7 @@ class Version implements Versionable
     protected function parse(): void
     {
         if (! empty($this->raw)) {
-            \preg_match('/(\d*)\.(\d*)(\.*(\d*))/i', $this->raw, $matches);
+            preg_match('/(\d*)\.(\d*)(\.*(\d*))/i', $this->raw, $matches);
 
             $this->major = (int) ($matches[1] ?? 0);
             $this->minor = (int) ($matches[2] ?? 0);

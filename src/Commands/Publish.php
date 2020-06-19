@@ -117,7 +117,7 @@ final class Publish extends BaseCommand
 
         return empty($options)
             ? $version->getVersion()
-            : \sprintf('%s (%s)', $version->getVersion(), \implode(', ', $options));
+            : sprintf('%s (%s)', $version->getVersion(), implode(', ', $options));
     }
 
     protected function pushRelease(Version $version, Commits $commits): void

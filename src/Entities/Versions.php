@@ -17,7 +17,7 @@ class Versions implements VersionsContract
 
     public function count(): int
     {
-        return \count($this->versions);
+        return count($this->versions);
     }
 
     /**

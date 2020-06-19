@@ -5,8 +5,11 @@ namespace Helldar\Publisher\Contracts;
 interface Version
 {
     public const MAJOR = 1;
+
     public const MANUAL = 4;
+
     public const MINOR = 2;
+
     public const PATCH = 3;
 
     public function __construct(string $version = null, int $id = null, bool $is_draft = false, bool $is_prerelease = false);

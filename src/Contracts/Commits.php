@@ -31,10 +31,15 @@ interface Commits
     const EXCLUDE_COMMITERS = [
         'web-flow',
     ];
+
     const TYPE_ADDED = 'Added';
+
     const TYPE_CHANGED = 'Changed';
+
     const TYPE_FIXED = 'Fixed';
+
     const TYPE_OTHER = 'Other';
+
     const TYPE_REMOVED = 'Removed';
 
     public function push(string $hash, string $message = null, string $committer_login = null): void;
