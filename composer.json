@@ -18,11 +18,11 @@
     },
     "autoload": {
         "psr-4": {
-            "Helldar\\Publisher\\": "src/"
+            "Helldar\\Publisher\\": "src"
         }
     },
     "extra": {
-        "class": "Helldar\\Publisher\\Publisher"
+        "class": "Application"
     },
     "config": {
         "sort-packages": true

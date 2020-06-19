@@ -9,7 +9,7 @@ use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
 use Helldar\Publisher\Commands\CommandProvider;
 
-final class Publisher implements PluginInterface, Capable
+final class Application implements PluginInterface, Capable
 {
     public function activate(Composer $composer, IOInterface $io)
     {
