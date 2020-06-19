@@ -44,7 +44,7 @@ final class Publish extends BaseCommand
         $text = $this->fullTextVersion($version);
 
         $accept = $this->getIO()
-            ->askConfirmation("Accept " . $text . " version? (yes, y, no or n)" . PHP_EOL);
+            ->askConfirmation('Accept ' . $text . ' version? (yes, y, no or n)' . PHP_EOL);
 
         if (! $accept) {
             return $this->getNewVersion();
