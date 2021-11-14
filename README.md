@@ -1,6 +1,6 @@
 # Release Publisher
 
-<img src="https://preview.dragon-code.pro/TheDragonCode/publisher.svg" alt="Release Publisher"/>
+<img src="https://preview.dragon-code.pro/TheDragonCode/publisher.svg?brand=github" alt="Release Publisher"/>
 
 This package was intended to make it easy to release a release to GitHub from the command line.
 
